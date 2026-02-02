@@ -4,7 +4,6 @@ borg-ssh-server
 
 Minimal Debian-based BorgBackup SSH service with least-privilege access and persistent storage
 
-
 https://docs.docker.com/reference/compose-file/
 
 Remove image:
