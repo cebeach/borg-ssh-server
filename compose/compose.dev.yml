@@ -1,0 +1,13 @@
+services:
+  borgbackup:
+    container_name: borgbackup-server
+
+    ports:
+      - "127.0.0.1:2242:22"
+
+    volumes:
+      - ./data/repos:/repos
+      - ./data/host_keys:/etc/ssh/host_keys
+      - ./data/ssh:/home/borg/.ssh
+      - /etc/localtime:/etc/localtime:ro
+
