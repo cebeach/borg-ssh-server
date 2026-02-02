@@ -1,0 +1,2 @@
+command="/home/borg/.local/bin/borg serve --restrict-to-path /repos",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-ed25519 <key>
+
