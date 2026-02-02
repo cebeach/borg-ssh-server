@@ -25,10 +25,23 @@ done
 # Build host key if it doesn't already exist
 if [[ ! -f $KEYS_DIR/ssh_host_ed25519_key ]]; then
     ssh-keygen -t ed25519 -f $KEYS_DIR/ssh_host_ed25519_key -N ""
-    chmod 600 $KEYS_DIR/ssh_host_ed25519_key
-    chmod 644 $KEYS_DIR/ssh_host_ed25519_key.pub
+else
+    echo "-*- $KEYS_DIR/ssh_host_ed25519_key"
 fi
 
+# Enforce key permissions
+chmod 600 $KEYS_DIR/ssh_host_ed25519_key
+chmod 644 $KEYS_DIR/ssh_host_ed25519_key.pub
+
+# Give a heads-up if the authorized_keys file doesn't exist
+#
+if [[ ! -f $DATA_DIR/ssh/authorized_keys ]]; then
+    echo "-E- Please create $DATA_DIR/ssh/authorized_keys"
+    echo "-E- Template: $BUILD_DIR/config/authorized_keys_template"
+    exit 1
+else
+    echo "-*- $DATA_DIR/ssh/authorized_keys"
+fi
 
 # Interactive debug:
 # docker run:

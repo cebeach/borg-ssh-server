@@ -48,8 +48,8 @@ sudo docker compose -f compose/compose.common.yml -f compose/compose.dev.yml up 
 
 # Show docker ps
 echo
-echo '$ docker ps'
-sudo docker ps
+echo '$ docker ps -a --filter name=borgbackup-server'
+sudo docker ps -a --filter name=borgbackup-server
 
 echo
 echo '$ docker port borgbackup-server'
