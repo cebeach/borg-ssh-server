@@ -10,7 +10,16 @@ set -euo pipefail
 # docker compose up -d
 # docker logs -f borgserver
 
-IMAGE_NAME=borg-ssh-server
+source $(dirname $0)/config.sh
+source $(dirname $0)/show.sh
+
+if [[ ! "$1" =~ ^[0-9]+$ ]] || (( $1 < 1000 || $1 > 60000 )); then
+    echo "Error: 1000 <= borg_uid <= 60000" >&2
+    exit 1
+fi
+
+borg_uid="$1"
+
 BUILD_DIR=~/docker/$IMAGE_NAME
 DATA_DIR=$BUILD_DIR/data
 KEYS_DIR=$DATA_DIR/host_keys
@@ -34,7 +43,6 @@ chmod 600 $KEYS_DIR/ssh_host_ed25519_key
 chmod 644 $KEYS_DIR/ssh_host_ed25519_key.pub
 
 # Give a heads-up if the authorized_keys file doesn't exist
-#
 if [[ ! -f $DATA_DIR/ssh/authorized_keys ]]; then
     echo "-E- Please create $DATA_DIR/ssh/authorized_keys"
     echo "-E- Template: $BUILD_DIR/config/authorized_keys_template"
@@ -43,8 +51,11 @@ else
     echo "-*- $DATA_DIR/ssh/authorized_keys"
 fi
 
+image=${DOCKER_ACCOUNT}/${IMAGE_NAME}:$(borg_image_tag $borg_uid)
+echo "image=${image}"
+
 # Start the container
-sudo docker compose -f compose/compose.common.yml -f compose/compose.dev.yml up -d
+sudo IMAGE=${image} docker compose -f compose/compose.common.yml -f compose/compose.dev.yml up -d
 
 # Show docker ps
 echo

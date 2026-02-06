@@ -10,7 +10,17 @@ set -euo pipefail
 # docker compose up -d
 # docker logs -f borgserver
 
-IMAGE_NAME=borg-ssh-server
+
+source $(dirname $0)/config.sh
+source $(dirname $0)/show.sh
+
+if [[ ! "$1" =~ ^[0-9]+$ ]] || (( $1 < 1000 || $1 > 60000 )); then
+    echo "Error: 1000 <= borg_uid <= 60000" >&2
+    exit 1
+fi
+
+borg_uid="$1"
+
 BUILD_DIR=~/docker/$IMAGE_NAME
 DATA_DIR=$BUILD_DIR/data
 KEYS_DIR=$DATA_DIR/host_keys
@@ -43,6 +53,9 @@ else
     echo "-*- $DATA_DIR/ssh/authorized_keys"
 fi
 
+tag=$(borg_image_tag $borg_uid)
+echo "tag=${tag}"
+
 # Interactive debug:
 # docker run:
 # -i (interactive): Keeps STDIN open even if not attached
@@ -56,7 +69,7 @@ sudo docker run -it --rm \
   -v $DATA_DIR/host_keys:/etc/ssh/host_keys \
   -v $DATA_DIR/ssh:/home/borg/.ssh \
   -v /etc/localtime:/etc/localtime:ro \
-  borg-ssh-server:bookworm \
+  ${DOCKER_ACCOUNT}/${IMAGE_NAME}:${tag} \
   /bin/bash
 
 # Stuff we can do interactively in the container to check it:

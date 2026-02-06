@@ -39,8 +39,18 @@
 # Without the above additions, docker traffic will be blocked by the default
 # UFW incoming deny policy.
 
+# Debian release codename; see https://www.debian.org/releases/
+ARG DEBIAN_CODENAME=bookworm
 
-FROM debian:bookworm
+FROM debian:${DEBIAN_CODENAME}
+
+# borgbackup pip package version spec; see https://pypi.org/project/borgbackup/
+ARG BORGBACKUP_VERSION=1.4.3
+
+# BORG_UID is the UID used for the borg user; this must match the UID on the host
+# which owns the authorized_keys file used in the /home/borg/.ssh/authorized_keys
+# bind mount
+ARG BORG_UID=1030
 
 # Install OpenSSH server, pipx, and build dependencies for BorgBackup
 # Package            Why
@@ -64,7 +74,6 @@ FROM debian:bookworm
 # Package            Why
 # ---------------    ----------------------------------------------------
 # iproute2           Provides ss utility to investigate sockets for debug
-
 
 RUN apt-get update && \
     apt-get install -y \
@@ -92,20 +101,40 @@ RUN rm /etc/ssh/ssh_host_*_key* && \
 # Create sshd dependencies
 RUN mkdir /run/sshd
 
-# Create borg user
-RUN adduser --home /home/borg --shell /bin/bash --disabled-password --comment "" borg
+# Create a user and group whose UID and GID map to our borg user on Synology; this is to faciliate
+# UID/GID mapping when we use a bind mount for the borg user's /home/borg/.ssh/authorized_keys.
+# This is a consequence of sshd's security practices as documented in the sshd man page:
+#
+# ~/.ssh/authorized_keys:
+#     Lists the public keys (DSA, ECDSA, Ed25519, RSA) that can be used for logging in as this user.
+#     The format of this file is described above.  The content of the file is not highly sensitive,
+#     but the recommended permissions are read/write for the user, and not accessible by others.
+#     If this file, the ~/.ssh directory, or the user's home directory are writable by other users,
+#     then the file could be modified or replaced by unauthorized users. In this case, sshd will not
+#     allow it to be used unless the StrictModes option has been set to “no”.
+#
+# Because we are using a bind mount for the container borg user's /home/borg/.ssh/authorized_keys;
+# UID/GID of the borg user in the container must match ownership on the host filesystem.
+
+# Create borg user with the specified UID, a group of the same name, and add to users (GID=100) group.
+RUN adduser --uid $BORG_UID --home /home/borg --disabled-password --comment "borgbackup" borg
 
 # Create borg user's .ssh directory which we bind mount at container runtime
 RUN mkdir /home/borg/.ssh && \
-    chmod 700 /home/borg/.ssh && \
-    chown borg:borg /home/borg/.ssh
+    touch /home/borg/.ssh/authorized_keys && \
+    chown -R borg:borg /home/borg/.ssh && \
+    chmod -R 700 /home/borg/.ssh
 
 # Make root directory for borg repositories and make it owned by borg
 RUN mkdir /repos && \
     chown borg:borg /repos
 
 # Install BorgBackup via pipx as borg user
-RUN su - borg -c '/usr/bin/pipx install borgbackup'
+RUN echo "BORGBACKUP_VERSION='$BORGBACKUP_VERSION' BORG_UID='$BORG_UID'"
+RUN su - borg -c "/usr/bin/pipx install borgbackup==${BORGBACKUP_VERSION}"
+
+# Change user's shell to nologin after pipx install
+RUN usermod -s /usr/sbin/nologin borg
 
 # Remove build dependencies (keep runtime libraries)
 RUN apt-get remove -y \
