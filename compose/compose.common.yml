@@ -1,6 +1,6 @@
 services:
   borgbackup:
-    image: borg-ssh-server:bookworm
+    image: ${IMAGE}
     hostname: borgbackup-server
 
     labels:

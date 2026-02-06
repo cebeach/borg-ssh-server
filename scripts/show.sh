@@ -1,0 +1,9 @@
+#!/bin/bash
+
+source $(dirname $0)/config.sh
+
+echo BORGBACKUP_VERSION=${BORGBACKUP_VERSION}
+echo DEBIAN_CODENAME=${DEBIAN_CODENAME}
+echo IMAGE_NAME=${IMAGE_NAME}
+echo IMAGE_REVISION=${IMAGE_REVISION}
+
