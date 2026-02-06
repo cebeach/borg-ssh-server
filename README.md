@@ -28,9 +28,9 @@ SSH host identity is managed explicitly:
 * Keys are not baked into the image to avoid shared identities across deployments
 
 All sensitive state is externalized via bind mounts:
-* Borg repositories
-* SSH host keys
-* `authorized_keys`
+* Borg repositories: /repos
+* sshd host keys: /etc/ssh/host_keys/ssh_host_ed25519_key, ssh_host_ed25519_key.pub
+* borg user authorized_keys: /home/borg/.ssh/authorized_keys
 
 The container image itself is treated as **stateless**. Recreating the container does not rotate identities or destroy data.
 
