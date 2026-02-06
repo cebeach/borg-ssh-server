@@ -8,4 +8,3 @@ ls -ld /home/borg /home/borg/.ssh /home/borg/.ssh/authorized_keys
 stat -c "%A %u:%g %n" /home/borg /home/borg/.ssh /home/borg/.ssh/authorized_keys
 '
 
-

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Start the borg-ssh-server container with an interactive prompt for debug/inspection
+
 set -euo pipefail
 
 # Typical workflow for container build/test iteration:
@@ -10,16 +12,8 @@ set -euo pipefail
 # docker compose up -d
 # docker logs -f borgserver
 
-
 source $(dirname $0)/config.sh
 source $(dirname $0)/show.sh
-
-if [[ ! "$1" =~ ^[0-9]+$ ]] || (( $1 < 1000 || $1 > 60000 )); then
-    echo "Error: 1000 <= borg_uid <= 60000" >&2
-    exit 1
-fi
-
-borg_uid="$1"
 
 BUILD_DIR=~/docker/$IMAGE_NAME
 DATA_DIR=$BUILD_DIR/data
@@ -44,7 +38,6 @@ chmod 600 $KEYS_DIR/ssh_host_ed25519_key
 chmod 644 $KEYS_DIR/ssh_host_ed25519_key.pub
 
 # Give a heads-up if the authorized_keys file doesn't exist
-#
 if [[ ! -f $DATA_DIR/ssh/authorized_keys ]]; then
     echo "-E- Please create $DATA_DIR/ssh/authorized_keys"
     echo "-E- Template: $BUILD_DIR/config/authorized_keys_template"
@@ -52,9 +45,6 @@ if [[ ! -f $DATA_DIR/ssh/authorized_keys ]]; then
 else
     echo "-*- $DATA_DIR/ssh/authorized_keys"
 fi
-
-tag=$(borg_image_tag $borg_uid)
-echo "tag=${tag}"
 
 # Interactive debug:
 # docker run:
@@ -69,7 +59,7 @@ sudo docker run -it --rm \
   -v $DATA_DIR/host_keys:/etc/ssh/host_keys \
   -v $DATA_DIR/ssh:/home/borg/.ssh \
   -v /etc/localtime:/etc/localtime:ro \
-  ${DOCKER_ACCOUNT}/${IMAGE_NAME}:${tag} \
+  ${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG} \
   /bin/bash
 
 # Stuff we can do interactively in the container to check it:

@@ -4,9 +4,8 @@
 # Path                Purpose
 # -----------------   ----------------------------------------
 # /repos              borgbackup repositories
-# /var/log            server-side visibility on sshd.log
-# /etc/ssh/host_keys  per-server unique host keys
-# /home/borg/.ssh     per-server authorized_keys
+# /etc/ssh/host_keys  ED25519 host keys (not stored in image)
+# /home/borg/.ssh     ssh authorized_keys (not stored in image)
 #
 #
 # UFW Rules
@@ -46,11 +45,6 @@ FROM debian:${DEBIAN_CODENAME}
 
 # borgbackup pip package version spec; see https://pypi.org/project/borgbackup/
 ARG BORGBACKUP_VERSION=1.4.3
-
-# BORG_UID is the UID used for the borg user; this must match the UID on the host
-# which owns the authorized_keys file used in the /home/borg/.ssh/authorized_keys
-# bind mount
-ARG BORG_UID=1030
 
 # Install OpenSSH server, pipx, and build dependencies for BorgBackup
 # Package            Why
@@ -117,7 +111,7 @@ RUN mkdir /run/sshd
 # UID/GID of the borg user in the container must match ownership on the host filesystem.
 
 # Create borg user with the specified UID, a group of the same name, and add to users (GID=100) group.
-RUN adduser --uid $BORG_UID --home /home/borg --disabled-password --comment "borgbackup" borg
+RUN adduser --home /home/borg --disabled-password --comment "borgbackup" borg
 
 # Create borg user's .ssh directory which we bind mount at container runtime
 RUN mkdir /home/borg/.ssh && \
@@ -130,11 +124,7 @@ RUN mkdir /repos && \
     chown borg:borg /repos
 
 # Install BorgBackup via pipx as borg user
-RUN echo "BORGBACKUP_VERSION='$BORGBACKUP_VERSION' BORG_UID='$BORG_UID'"
 RUN su - borg -c "/usr/bin/pipx install borgbackup==${BORGBACKUP_VERSION}"
-
-# Change user's shell to nologin after pipx install
-RUN usermod -s /usr/sbin/nologin borg
 
 # Remove build dependencies (keep runtime libraries)
 RUN apt-get remove -y \
@@ -178,7 +168,9 @@ RUN sed -i 's@#\?session\s*required\s*pam_loginuid.so@#session optional pam_logi
 # (e.g., `docker run -p` or Docker Compose) knows which port to map.
 EXPOSE 22
 
-# Run sshd in as PID 1 with logging to stderr; run the following to tail sshd log:
-# $ docker logs --tail 100 -f borgbackup-server
-CMD ["/usr/sbin/sshd", "-D", "-e"]
+# scripts/entrypoint.sh sets the borg account UID and GID to match those of
+# the bind mapped /home/borg/.ssh/authorized_keys at container startup time
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

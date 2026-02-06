@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Start up the borg-ssh-server container using docker compose;
+# assumes the following directory structure:
+# data/host_keys/ssh_host_ed25519_key         ... created if not existing
+# data/host_keys/ssh_host_ed25519_key.pub     ... created if not existing
+# data/ssh/authorized_keys                    ... required; see config/authorized_keys_template
+# data/repos                                  ... created if not existing
+# scripts/start.sh (this file)
+# config/authorized_keys_template
+
+set -euo pipefail
+
+# Typical workflow for container build/test iteration:
+# docker compose down
+# docker rmi borg-ssh-server
+# docker builder prune --all
+# docker compose build --no-cache
+# docker compose up -d
+# docker logs -f borgserver
+
+source $(dirname $0)/config.sh
+source $(dirname $0)/show.sh
+
+ROOT=$(dirname $0)/..
+
+cd $ROOT
+
+# Ensure directories exist
+for dir in repos host_keys ssh; do
+    mkdir -p "$ROOT/data/$dir"
+done
+
+# Build host key if it doesn't already exist
+if [[ ! -f $ROOT/data/host_keys/ssh_host_ed25519_key ]]; then
+    ssh-keygen -t ed25519 -f $ROOT/data/host_keys/ssh_host_ed25519_key -N ""
+else
+    echo "-*- $ROOT/data/host_keys/ssh_host_ed25519_key"
+fi
+
+# Enforce key permissions
+chmod 600 $ROOT/data/host_keys/ssh_host_ed25519_key
+chmod 644 $ROOT/data/host_keys/ssh_host_ed25519_key.pub
+
+# Give a heads-up if the authorized_keys file doesn't exist
+if [[ ! -f $ROOT/data/ssh/authorized_keys ]]; then
+    echo "-E- Please create $ROOT/data/ssh/authorized_keys"
+    echo "-E- Template: $ROOT/config/authorized_keys_template"
+    exit 1
+else
+    echo "-*- $ROOT/ssh/authorized_keys"
+fi
+
+# Start the container
+sudo IMAGE=${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG} docker compose -f compose/compose.common.yml -f compose/compose.dev.yml up -d
+
+# Show docker ps
+echo
+echo '$ docker ps -a --filter name=borgbackup-server'
+sudo docker ps -a --filter name=borgbackup-server
+
+echo
+echo '$ docker port borgbackup-server'
+sudo docker port borgbackup-server
+
+echo
+echo '$ docker logs --tail 100 -f borgbackup-server'
+sudo docker logs --tail 100 -f borgbackup-server
+
