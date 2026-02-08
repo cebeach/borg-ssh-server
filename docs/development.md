@@ -1,8 +1,9 @@
 # Development Notes
 
-The initial development environment is a debian 12 (bookworm) workstation on amd64 architecture using UFW for firewall rules.
+The initial development environment is a [debian bookworm](https://www.debian.org/releases/bookworm) workstation on amd64 architecture using UFW for firewall rules.
 
-When using UFW, the following are recommended rules to add to the UFW 'before hook' in /etc/ufw/before.rules:
+When using UFW, the following are recommended rules to add to the UFW 'before hook' in `/etc/ufw/before.rules`:
+```
 *filter
 ...
 :DOCKER-USER - [0:0]
@@ -13,3 +14,4 @@ When using UFW, the following are recommended rules to add to the UFW 'before ho
 -A DOCKER-USER -j DROP
 ...
 COMMIT
+```

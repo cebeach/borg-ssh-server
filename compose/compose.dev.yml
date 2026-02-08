@@ -7,7 +7,8 @@ services:
 
     volumes:
       - ../data/repos:/repos
-      - ../data/host_keys:/etc/ssh/host_keys
-      - ../data/ssh:/home/borg/.ssh
+      - ../data/ssh/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro
+      - ../data/ssh/ssh_host_ed25519_key.pub:/etc/ssh/ssh_host_ed25519_key.pub:ro
+      - ../data/ssh/authorized_keys:/home/borg/.ssh/authorized_keys:ro
       - /etc/localtime:/etc/localtime:ro
 
