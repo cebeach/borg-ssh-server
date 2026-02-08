@@ -15,8 +15,6 @@ set -euo pipefail
 source $(dirname $0)/config.sh
 source $(dirname $0)/show.sh
 
-cd $BUILD_DIR
-
 ROOT=$(dirname $0)/..
 
 cd $ROOT

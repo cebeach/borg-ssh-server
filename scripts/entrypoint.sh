@@ -202,7 +202,9 @@ else
     log_info "borg user reassigned UID=$target_uid"
 fi
 
-
+log_info "-------------------- /etc/ssh/sshd_config begin --------------------"
+cat /etc/ssh/sshd_config >&2
+log_info "-------------------- /etc/ssh/sshd_config end --------------------"
 
 
 # Run sshd in as PID 1 with logging to stderr; run the following to tail sshd log:
