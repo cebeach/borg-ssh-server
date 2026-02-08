@@ -15,7 +15,7 @@ DOCKER_ACCOUNT=chadly314
 IMAGE_NAME=borg-ssh-server
 
 # docker container integer revision used in tag
-IMAGE_REVISION=4
+IMAGE_REVISION=5
 
 TAG=${BORGBACKUP_VERSION}-${DEBIAN_CODENAME}-r${IMAGE_REVISION}
 

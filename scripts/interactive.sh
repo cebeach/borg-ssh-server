@@ -15,35 +15,35 @@ set -euo pipefail
 source $(dirname $0)/config.sh
 source $(dirname $0)/show.sh
 
-BUILD_DIR=~/docker/$IMAGE_NAME
-DATA_DIR=$BUILD_DIR/data
-KEYS_DIR=$DATA_DIR/host_keys
-
 cd $BUILD_DIR
 
-# Ensure data dirs exist
-for dir in repos host_keys ssh; do
-    mkdir -p "$DATA_DIR/$dir"
+ROOT=$(dirname $0)/..
+
+cd $ROOT
+
+# Ensure directories exist
+for dir in repos ssh; do
+    mkdir -p "$ROOT/data/$dir"
 done
 
 # Build host key if it doesn't already exist
-if [[ ! -f $KEYS_DIR/ssh_host_ed25519_key ]]; then
-    ssh-keygen -t ed25519 -f $KEYS_DIR/ssh_host_ed25519_key -N ""
+if [[ ! -f $ROOT/data/ssh/ssh_host_ed25519_key ]]; then
+    ssh-keygen -t ed25519 -f $ROOT/data/ssh/ssh_host_ed25519_key -N ""
 else
-    echo "-*- $KEYS_DIR/ssh_host_ed25519_key"
+    echo "-*- $ROOT/data/ssh/ssh_host_ed25519_key"
 fi
 
 # Enforce key permissions
-chmod 600 $KEYS_DIR/ssh_host_ed25519_key
-chmod 644 $KEYS_DIR/ssh_host_ed25519_key.pub
+chmod 600 $ROOT/data/ssh/ssh_host_ed25519_key
+chmod 644 $ROOT/data/ssh/ssh_host_ed25519_key.pub
 
 # Give a heads-up if the authorized_keys file doesn't exist
-if [[ ! -f $DATA_DIR/ssh/authorized_keys ]]; then
-    echo "-E- Please create $DATA_DIR/ssh/authorized_keys"
-    echo "-E- Template: $BUILD_DIR/config/authorized_keys_template"
+if [[ ! -f $ROOT/data/ssh/authorized_keys ]]; then
+    echo "-E- Please create $ROOT/data/ssh/authorized_keys"
+    echo "-E- Template: $ROOT/config/authorized_keys_template"
     exit 1
 else
-    echo "-*- $DATA_DIR/ssh/authorized_keys"
+    echo "-*- $ROOT/ssh/authorized_keys"
 fi
 
 # Interactive debug:
@@ -55,9 +55,10 @@ sudo docker run -it --rm \
   --name borgbackup-server \
   --hostname borgbackup-server \
   -p 127.0.0.1:2242:22 \
-  -v $DATA_DIR/repos:/repos \
-  -v $DATA_DIR/host_keys:/etc/ssh/host_keys \
-  -v $DATA_DIR/ssh:/home/borg/.ssh \
+  -v $ROOT/data/repos:/repos \
+  -v $ROOT/data/ssh/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro \
+  -v $ROOT/data/ssh/ssh_host_ed25519_key.pub:/etc/ssh/ssh_host_ed25519_key.pub:ro \
+  -v $ROOT/data/ssh/authorized_keys:/home/borg/.ssh/authorized_keys:ro \
   -v /etc/localtime:/etc/localtime:ro \
   ${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG} \
   /bin/bash
