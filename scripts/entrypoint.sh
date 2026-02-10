@@ -136,75 +136,90 @@ fi
 
 
 # Inspect UID and GID of the authorized_keys file
-target_uid="$(stat -c '%u' "$AUTHORIZED_KEYS")"
-target_gid="$(stat -c '%g' "$AUTHORIZED_KEYS")"
+authkeys_uid="$(stat -c '%u' "$AUTHORIZED_KEYS")"
+authkeys_gid="$(stat -c '%g' "$AUTHORIZED_KEYS")"
 
-log_info "$AUTHORIZED_KEYS has UID=$target_uid GID=$target_gid"
+log_info "$AUTHORIZED_KEYS has UID=$authkeys_uid GID=$authkeys_gid"
 
-if [[ $target_uid -lt $MIN_UID ]]; then
-    log_error "$AUTHORIZED_KEYS UID $target_uid is less than minimum allowed value of $MIN_UID"
+if [[ $authkeys_uid -lt $MIN_UID ]]; then
+    log_error "$AUTHORIZED_KEYS UID $authkeys_uid is less than minimum allowed value of $MIN_UID"
     log_error "UIDs below $MIN_UID are reserved for system accounts per Debian Policy"
     exit 1
 fi
 
-if [[ $target_uid -gt $MAX_UID ]]; then
-    log_error "$AUTHORIZED_KEYS UID $target_uid is greater than maximum allowed value of $MAX_UID"
+if [[ $authkeys_uid -gt $MAX_UID ]]; then
+    log_error "$AUTHORIZED_KEYS UID $authkeys_uid is greater than maximum allowed value of $MAX_UID"
     log_error "UIDs above $MAX_UID are in reserved ranges per Debian Policy"
     exit 1
 fi
 
 # Validate GID is within acceptable range
-if [[ $target_gid -lt $MIN_GID ]]; then
-    log_error "$AUTHORIZED_KEYS GID $target_gid is less than minimum allowed value of $MIN_GID"
+if [[ $authkeys_gid -lt $MIN_GID ]]; then
+    log_error "$AUTHORIZED_KEYS GID $authkeys_gid is less than minimum allowed value of $MIN_GID"
     log_error "GIDs below $MIN_GID are reserved for system groups per Debian Policy"
     exit 1
 fi
 
-if [[ $target_gid -gt $MAX_GID ]]; then
-    log_error "$AUTHORIZED_KEYS GID $target_gid is greater than maximum allowed value of $MAX_GID"
+if [[ $authkeys_gid -gt $MAX_GID ]]; then
+    log_error "$AUTHORIZED_KEYS GID $authkeys_gid is greater than maximum allowed value of $MAX_GID"
     log_error "GIDs above $MAX_GID are in reserved ranges per Debian Policy"
     exit 1
 fi
 
 # Coerce UID and GID of the borg user account if necessary
-old_uid="$(id -u borg)"
-old_gid="$(id -g borg)"
+borg_uid="$(id -u borg)"
+borg_gid="$(id -g borg)"
 
-log_info "container borg user UID=$old_uid, borg group GID=$old_gid"
+log_info "container borg user UID=$borg_uid, borg group GID=$borg_gid"
 
-if [[ "$target_gid" -eq "$old_gid" ]]
+if [[ "$authkeys_gid" -eq "$borg_gid" ]]
 then
-    log_info "user borg GID=$old_gid matches $AUTHORIZED_KEYS GID, no GID change necessary"
+    log_info "user borg GID=$borg_gid matches $AUTHORIZED_KEYS GID, no GID change necessary"
 else
-    if getent group "$target_gid" >/dev/null
+    # Does a group with id $authkeys_gid already exist?
+    if getent group "$authkeys_gid" >/dev/null
     then
-        # add user to existing group
-        usermod -g "$target_gid" borg
-        log_info "borg user added to group $target_gid"
+        # Change borg user's primary group to match
+        usermod -g "$authkeys_gid" borg
+        log_info "borg user primary group id changed to $authkeys_gid"
     else
-        # move borg group to target_gid
-        groupmod -g "$target_gid" borg
-        log_info "borg group reassigned GID=$target_gid"
+        # Change borg group id to match
+        groupmod -g "$authkeys_gid" borg
+        log_info "borg group reassigned GID=$authkeys_gid"
     fi
 fi
 
-# ensure target_uid is free, then move borg to it
-if [[ "$target_uid" -eq "$old_uid" ]]
+# ensure authkeys_uid is free, then move borg to it
+if [[ "$authkeys_uid" -eq "$borg_uid" ]]
 then
-    log_info "user borg UID=$old_uid matches $AUTHORIZED_KEYS UID, no UID change necessary"
+    log_info "user borg UID=$borg_uid matches $AUTHORIZED_KEYS UID, no UID change necessary"
 else
-    if getent passwd "$target_uid" >/dev/null
+    # Does a user with id $authkeys_uid already exist?
+    if getent passwd "$authkeys_uid" >/dev/null
     then
-        log_error "UID $target_uid already exists in container; can't remap user borg"
+        log_error "UID $authkeys_uid already exists in container; can't remap user borg"
         exit 1
     fi
-    usermod -u "$target_uid" borg
-    log_info "borg user reassigned UID=$target_uid"
+    # Change borg user id to match
+    usermod -u "$authkeys_uid" borg
+    log_info "borg user reassigned UID=$authkeys_uid"
 fi
 
-log_info "-------------------- /etc/ssh/sshd_config begin --------------------"
-cat /etc/ssh/sshd_config >&2
-log_info "-------------------- /etc/ssh/sshd_config end --------------------"
+
+# Update ownership in /home/borg after id changes
+# Skip .ssh if it's a read-only bind mount, handle authorized_keys separately
+if mountpoint -q /home/borg/.ssh 2>/dev/null; then
+    log_info "/home/borg/.ssh is a bind mount, skipping recursive chown on it"
+    find /home/borg -path /home/borg/.ssh -prune -o -exec chown borg:borg {} +
+else
+    # .ssh is not a bind mount, we can change everything
+    chown -R borg:borg /home/borg 2>/dev/null || {
+        log_warning "Some files in /home/borg could not have ownership changed (may be read-only bind mounts)"
+        # Try without .ssh directory
+        find /home/borg -path /home/borg/.ssh -prune -o -exec chown borg:borg {} +
+        chown borg:borg /home/borg/.ssh 2>/dev/null || log_warning "Could not change ownership of /home/borg/.ssh"
+    }
+fi
 
 
 # Run sshd in as PID 1 with logging to stderr; run the following to tail sshd log:
