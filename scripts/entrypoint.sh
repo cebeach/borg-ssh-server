@@ -53,10 +53,12 @@ log_error() {
 # Identify bind mounts from /proc/self/mountinfo (see proc(5) for format).
 # A bind mount has a non-"/" root (field 4), distinguishing it from the container's
 # own root overlay. We exclude virtual filesystems and Docker's automatic mounts
-# (/, /etc/resolv.conf, /etc/hostname, /etc/hosts) to isolate user-specified mounts.
+# (/, /etc/resolv.conf, /etc/hostname, /etc/hosts, /etc/localtime) to isolate
+# user-specified mounts.
 bind_mounts=$(awk '
     $0 !~ /- (proc|sysfs|tmpfs|devpts|devtmpfs|cgroup|mqueue) / && $4 != "/" &&
-    $5 != "/" && $5 != "/etc/resolv.conf" && $5 != "/etc/hostname" && $5 != "/etc/hosts" {
+    $5 != "/" && $5 != "/etc/resolv.conf" && $5 != "/etc/hostname" && $5 != "/etc/hosts" &&
+    $5 != "/etc/localtime" {
         print $5
     }
 ' /proc/self/mountinfo 2>/dev/null || true)
