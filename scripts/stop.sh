@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# stop the borgbackup-server container
+# stop and remove the borgbackup-server container
 
 sudo docker stop borgbackup-server
 sudo docker rm borgbackup-server
-

@@ -4,14 +4,6 @@
 
 set -euo pipefail
 
-# Typical workflow for container build/test iteration:
-# docker compose down
-# docker rmi borg-ssh-server
-# docker builder prune --all
-# docker compose build --no-cache
-# docker compose up -d
-# docker logs -f borgserver
-
 source $(dirname $0)/config.sh
 source $(dirname $0)/show.sh
 
@@ -41,7 +33,7 @@ if [[ ! -f $ROOT/data/ssh/authorized_keys ]]; then
     echo "-E- Template: $ROOT/config/authorized_keys_template"
     exit 1
 else
-    echo "-*- $ROOT/ssh/authorized_keys"
+    echo "-*- $ROOT/data/ssh/authorized_keys"
 fi
 
 # Interactive debug:
@@ -74,4 +66,3 @@ sudo docker run -it --rm \
 
 # Try to start SSHD manually with debug logs to standard error
 # /usr/sbin/sshd -D -e
-

@@ -11,14 +11,6 @@
 
 set -euo pipefail
 
-# Typical workflow for container build/test iteration:
-# docker compose down
-# docker rmi borg-ssh-server
-# docker builder prune --all
-# docker compose build --no-cache
-# docker compose up -d
-# docker logs -f borgserver
-
 source $(dirname $0)/config.sh
 source $(dirname $0)/show.sh
 
@@ -48,7 +40,7 @@ if [[ ! -f $ROOT/data/ssh/authorized_keys ]]; then
     echo "-E- Template: $ROOT/config/authorized_keys_template"
     exit 1
 else
-    echo "-*- $ROOT/ssh/authorized_keys"
+    echo "-*- $ROOT/data/ssh/authorized_keys"
 fi
 
 # Start the container
@@ -66,4 +58,3 @@ sudo docker port borgbackup-server
 echo
 echo '$ docker logs --tail 100 -f borgbackup-server'
 sudo docker logs --tail 100 -f borgbackup-server
-

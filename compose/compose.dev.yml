@@ -6,9 +6,8 @@ services:
       - "127.0.0.1:2242:22"
 
     volumes:
-      - ../data/repos:/repos
+      - ../data/repos:/repos:rw
       - ../data/ssh/ssh_host_ed25519_key:/etc/ssh/ssh_host_ed25519_key:ro
       - ../data/ssh/ssh_host_ed25519_key.pub:/etc/ssh/ssh_host_ed25519_key.pub:ro
       - ../data/ssh/authorized_keys:/home/borg/.ssh/authorized_keys:ro
       - /etc/localtime:/etc/localtime:ro
-

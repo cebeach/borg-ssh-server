@@ -18,10 +18,9 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pgrep -x sshd >/dev/null && test -d /repos && test -w /repos && test -f /etc/ssh/ssh_host_ed25519_key && test -f /etc/ssh/ssh_host_ed25519_key.pub && test -f /home/borg/.ssh/authorized_keys"
+          "pgrep -x sshd >/dev/null && test -d /repos && su -s /bin/sh borg -c 'test -w /repos' && test -f /etc/ssh/ssh_host_ed25519_key && test -f /etc/ssh/ssh_host_ed25519_key.pub && test -f /home/borg/.ssh/authorized_keys",
         ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-
