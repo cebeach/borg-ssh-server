@@ -75,7 +75,7 @@ The authorized_keys file must follow this syntax exactly:
 
     command="/home/borg/.local/bin/borg serve --restrict-to-path /repos",no-port-forwarding,no-X11-forwarding,no-agent-forwarding ssh-ed25519 your_public_key your_comment
 
-This restricts the ssh client to running only `/home/borg/.local/bin/borg serve --restrict-to-path /repos",no-port-forwarding,no-X11-forwarding,no-agent-forwarding` as described in [borg serve](https://borgbackup.readthedocs.io/en/stable/usage/serve.html)
+This restricts the ssh client to running only `/home/borg/.local/bin/borg serve --restrict-to-path /repos` as described in [borg serve](https://borgbackup.readthedocs.io/en/stable/usage/serve.html)
 
 
 ## docker compose
