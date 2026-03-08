@@ -110,14 +110,14 @@ After starting the container with docker compose (scripts/start.sh), we want to 
 
 I create an entry in my `~/.ssh/config` to both simplify the URL passed to borg and to incorporate the recommendations for ServerAliveInterval and ServerAliveCountMax discussed in [borg serve](https://borgbackup.readthedocs.io/en/stable/usage/serve.html):
 
-Host localhost.borg
-    HostName localhost
-    User borg
-    Port 2242
-    IdentityFile ~/.ssh/id_ed25519_borg_diskstation
-    IdentitiesOnly yes
-    ServerAliveInterval 10
-    ServerAliveCountMax 30
+    Host localhost.borg
+        HostName localhost
+        User borg
+        Port 2242
+        IdentityFile ~/.ssh/id_ed25519_borg_diskstation
+        IdentitiesOnly yes
+        ServerAliveInterval 10
+        ServerAliveCountMax 30
 
 ## Attempt to initialize a repo to confirm communication
 
