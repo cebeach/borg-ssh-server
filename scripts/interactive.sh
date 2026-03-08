@@ -41,7 +41,7 @@ fi
 # -i (interactive): Keeps STDIN open even if not attached
 # -t (tty): Allocates a pseudo-TTY (terminal)
 # --rm: Automatically removes container when it exits (keeps system clean)
-sudo docker run -it --rm \
+docker run -it --rm \
   --name borgbackup-server \
   --hostname borgbackup-server \
   -p 127.0.0.1:2242:22 \

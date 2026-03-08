@@ -38,11 +38,11 @@
 # ---- cut here ----
 # Without the above additions, docker traffic will be blocked by the default
 # UFW incoming deny policy.
-
 # Debian release codename; see https://www.debian.org/releases/
-ARG DEBIAN_CODENAME=bookworm
+ARG FROM=dhi.io/debian-base:__codename__-debian__release__-dev
 
-FROM debian:${DEBIAN_CODENAME}
+# ARG values declared before FROM are reset after the FROM instruction
+FROM ${FROM}
 
 # borgbackup pip package version spec; see https://pypi.org/project/borgbackup/
 ARG BORGBACKUP_VERSION=1.4.3
