@@ -1,0 +1,77 @@
+{
+   "CapAdd" : null,
+   "CapDrop" : null,
+   "cmd" : "",
+   "cpu_priority" : 50,
+   "enable_publish_all_ports" : false,
+   "enable_restart_policy" : false,
+   "enable_service_portal" : null,
+   "enabled" : false,
+   "env_variables" : [
+      {
+         "key" : "DEBIAN_FRONTEND",
+         "value" : "noninteractive"
+      },
+      {
+         "key" : "PATH",
+         "value" : "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      }
+   ],
+   "exporting" : false,
+   "id" : "a6423af6a5589120babe9bcf8fee23f21c9465c67a211d9287f13db5be0d9411",
+   "image" : "chadly314/borg-ssh-server:1.4.3-bookworm-r1",
+   "is_ddsm" : false,
+   "is_package" : false,
+   "links" : [],
+   "memory_limit" : 0,
+   "name" : "borg-ssh-server",
+   "network" : [
+      {
+         "driver" : "bridge",
+         "name" : "bridge"
+      }
+   ],
+   "network_mode" : "bridge",
+   "port_bindings" : [
+      {
+         "container_port" : 22,
+         "host_port" : 2242,
+         "type" : "tcp"
+      }
+   ],
+   "privileged" : false,
+   "shortcut" : {
+      "enable_shortcut" : false,
+      "enable_status_page" : false,
+      "enable_web_page" : false,
+      "web_page_url" : ""
+   },
+   "use_host_network" : false,
+   "volume_bindings" : [
+      {
+         "host_volume_file" : "/borgbackup/ssh/authorized_keys",
+         "mount_point" : "/home/borg/.ssh/authorized_keys",
+         "type" : "ro"
+      },
+      {
+         "host_volume_file" : "/borgbackup/ssh/ssh_host_ed25519_key",
+         "mount_point" : "/etc/ssh/ssh_host_ed25519_key",
+         "type" : "ro"
+      },
+      {
+         "host_volume_file" : "/borgbackup/ssh/ssh_host_ed25519_key.pub",
+         "mount_point" : "/etc/ssh/ssh_host_ed25519_key.pub",
+         "type" : "ro"
+      },
+      {
+         "host_volume_file" : "/borgbackup/repos",
+         "mount_point" : "/repos",
+         "type" : "rw"
+      },
+      {
+         "host_volume_file" : "/borgbackup/localtime",
+         "mount_point" : "/etc/localtime",
+         "type" : "ro"
+      }
+   ]
+}

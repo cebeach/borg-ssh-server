@@ -7,12 +7,13 @@ set -euo pipefail
 source $(dirname $0)/config.sh
 source $(dirname $0)/show.sh
 
-sudo docker build \
+docker build \
     --build-arg BORGBACKUP_VERSION=${BORGBACKUP_VERSION} \
-    --build-arg DEBIAN_CODENAME=${DEBIAN_CODENAME} \
+    --build-arg FROM=${FROM[${DEBIAN_CODENAME}]} \
+    --progress=plain \
     -t ${IMAGE_NAME}:${DEBIAN_CODENAME} .
 
-sudo docker tag ${IMAGE_NAME}:${DEBIAN_CODENAME} ${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG}
+docker tag ${IMAGE_NAME}:${DEBIAN_CODENAME} ${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG}
 
-sudo docker image ls
+docker image ls
 

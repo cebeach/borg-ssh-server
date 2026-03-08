@@ -223,6 +223,8 @@ fi
 # Skip authorized_keys since it is a bind mount from the host
 find /home/borg -path "$AUTHORIZED_KEYS" -prune -o -exec chown borg:borg {} +
 
+# Log the effective time to ensure /etc/localtime bind mount is functioning
+echo "date: $(date)"
 
 # Run sshd as PID 1 with logging to stderr
 exec /usr/sbin/sshd -D -e

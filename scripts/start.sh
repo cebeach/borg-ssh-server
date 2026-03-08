@@ -44,17 +44,18 @@ else
 fi
 
 # Start the container
-sudo IMAGE=${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG} docker compose -f compose/compose.common.yml -f compose/compose.dev.yml up -d
+IMAGE=${DOCKER_ACCOUNT}/${IMAGE_NAME}:${TAG} docker compose -f compose/compose.common.yml -f compose/compose.dev.yml up -d
 
 # Show docker ps
 echo
 echo '$ docker ps -a --filter name=borgbackup-server'
-sudo docker ps -a --filter name=borgbackup-server
+docker ps -a --filter name=borgbackup-server
 
 echo
 echo '$ docker port borgbackup-server'
-sudo docker port borgbackup-server
+docker port borgbackup-server
 
 echo
 echo '$ docker logs --tail 100 -f borgbackup-server'
-sudo docker logs --tail 100 -f borgbackup-server
+docker logs --tail 100 -f borgbackup-server
+
